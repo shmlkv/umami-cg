@@ -25,9 +25,6 @@ export function NavBar() {
   return (
     <div className={styles.navbar}>
       <div className={styles.logo}>
-        <Icon size="lg">
-          <Icons.Logo />
-        </Icon>
         <Text>shumami</Text>
       </div>
       <div className={styles.links}>
