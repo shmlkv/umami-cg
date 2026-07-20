@@ -164,7 +164,8 @@ describe('InvitePage invitation handling', () => {
     let loginBody: unknown;
     let acceptBody: unknown;
     let acceptAuthorization: string | null = null;
-    const existingUser = { ...USER, username: 'existing-user' };
+    const existingUser = { ...USER, username: 'existing-user', teams: [] };
+    const acceptedUser = { ...existingUser, teams: USER.teams };
 
     server.use(
       http.post('/api/teams/invites/inspect', () => HttpResponse.json(INVITE)),
@@ -177,6 +178,7 @@ describe('InvitePage invitation handling', () => {
         acceptAuthorization = request.headers.get('authorization');
         return HttpResponse.json({
           team: { id: 'team-1', name: 'Analytics Team' },
+          user: acceptedUser,
           membership: {
             id: 'membership-2',
             teamId: 'team-1',
@@ -201,7 +203,7 @@ describe('InvitePage invitation handling', () => {
     expect(acceptBody).toEqual({ token: INVITE_TOKEN });
     expect(acceptAuthorization).toBe('Bearer login-session');
     expect(getClientAuthToken()).toBe('login-session');
-    expect(useApp.getState().user).toEqual(existingUser);
+    expect(useApp.getState().user).toEqual(acceptedUser);
     expect(getStoredValues(localStorage)).not.toContain(INVITE_TOKEN);
     expect(getStoredValues(sessionStorage)).not.toContain(INVITE_TOKEN);
   });
@@ -210,19 +212,21 @@ describe('InvitePage invitation handling', () => {
     let verifyAuthorization: string | null = null;
     let acceptAuthorization: string | null = null;
     let acceptBody: unknown;
+    const userBeforeAccepting = { ...USER, teams: [] };
     setClientAuthToken('persisted-session');
 
     server.use(
       http.post('/api/teams/invites/inspect', () => HttpResponse.json(INVITE)),
       http.post('/api/auth/verify', ({ request }) => {
         verifyAuthorization = request.headers.get('authorization');
-        return HttpResponse.json(USER);
+        return HttpResponse.json(userBeforeAccepting);
       }),
       http.post('/api/teams/invites/accept', async ({ request }) => {
         acceptAuthorization = request.headers.get('authorization');
         acceptBody = await request.json();
         return HttpResponse.json({
           team: { id: 'team-1', name: 'Analytics Team' },
+          user: USER,
           membership: {
             id: 'membership-3',
             teamId: 'team-1',
@@ -246,6 +250,21 @@ describe('InvitePage invitation handling', () => {
     expect(acceptBody).toEqual({ token: INVITE_TOKEN });
     expect(acceptAuthorization).toBe('Bearer persisted-session');
     expect(useApp.getState().user).toEqual(USER);
+  });
+
+  test('does not offer password forms when password authentication is disabled', async () => {
+    server.use(http.post('/api/teams/invites/inspect', () => HttpResponse.json(INVITE)));
+
+    render(<InvitePage passwordAuthDisabled />, { route: INVITE_ROUTE });
+
+    expect(await screen.findByText('Analytics Team')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Sign in through your configured authentication provider, then reopen this invitation link.',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'Sign in' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'Create account' })).not.toBeInTheDocument();
   });
 
   test('offers credential flows when a persisted session cannot be verified', async () => {

@@ -38,6 +38,11 @@ type AuthResponse = {
   team?: { id: string; name: string };
 };
 
+type AcceptResponse = {
+  team: { id: string; name: string };
+  user: Parameters<typeof setUser>[0];
+};
+
 type InviteState =
   | { status: 'loading' }
   | { status: 'unavailable' }
@@ -48,7 +53,7 @@ function isInvalidInviteError(error: unknown) {
   return (error as Error & { code?: string })?.code === 'INVALID_TEAM_INVITE';
 }
 
-export function InvitePage() {
+export function InvitePage({ passwordAuthDisabled = false }: { passwordAuthDisabled?: boolean }) {
   const { post } = useApi();
   const { t, labels, messages, getErrorMessage } = useMessages();
   const router = useRouter();
@@ -149,12 +154,12 @@ export function InvitePage() {
         username: data.username,
         password: data.password,
       });
-      const result = await post(
+      const result: AcceptResponse = await post(
         '/teams/invites/accept',
         { token },
         { authorization: `Bearer ${auth.token}` },
       );
-      completeAuthentication(auth, result.team.id);
+      completeAuthentication({ ...auth, user: result.user }, result.team.id);
     } catch (error) {
       if (isInvalidInviteError(error)) {
         tokenRef.current = null;
@@ -180,12 +185,13 @@ export function InvitePage() {
     setIsPending(true);
 
     try {
-      const result = await post(
+      const result: AcceptResponse = await post(
         '/teams/invites/accept',
         { token },
         { authorization: `Bearer ${authToken}` },
       );
       tokenRef.current = null;
+      setUser(result.user);
       router.push(`/teams/${result.team.id}`);
     } catch (error) {
       if (isInvalidInviteError(error)) {
@@ -227,6 +233,10 @@ export function InvitePage() {
             </FormSubmitButton>
           </FormButtons>
         </Form>
+      ) : passwordAuthDisabled ? (
+        <Text color="muted" style={{ maxWidth: 420, textAlign: 'center' }}>
+          {t(messages.invitationAuthenticationRequired)}
+        </Text>
       ) : (
         <Tabs
           selectedKey={tab}

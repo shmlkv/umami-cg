@@ -33,7 +33,9 @@ WITH "ranked_team_user" AS (
         "team_user_id",
         ROW_NUMBER() OVER (
             PARTITION BY "team_id", "user_id"
-            ORDER BY "created_at" ASC NULLS LAST, "team_user_id" ASC
+            -- Preserve the most recently changed membership so an older duplicate
+            -- cannot restore a stale role when the unique constraint is added.
+            ORDER BY "updated_at" DESC NULLS LAST, "created_at" DESC NULLS LAST, "team_user_id" DESC
         ) AS "row_number"
     FROM "team_user"
 )

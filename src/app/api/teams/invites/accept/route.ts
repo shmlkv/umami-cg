@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { getAuthResponseUser } from '@/lib/auth-response';
 import { parseRequest } from '@/lib/request';
 import { badRequest, conflict, json, serverError, withNoStore } from '@/lib/response';
 import { redeemTeamInvite, TEAM_INVITE_ERROR_CODES, TeamInviteError } from '@/lib/team-invite';
@@ -21,11 +22,13 @@ export async function POST(request: Request) {
       { token: body.token, userId: auth.user.id },
       { repository: teamInviteRepository },
     );
+    const user = await getAuthResponseUser(auth.user);
 
     return noStore(
       json({
         team: { id: team.id, name: team.name },
         membership,
+        user,
       }),
     );
   } catch (error) {

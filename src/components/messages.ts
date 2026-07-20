@@ -470,6 +470,7 @@ export const messages: Record<string, string> = {
   confirmRevokeInvitation: 'message.confirm-revoke-invitation',
   invitationLinkOneTime: 'message.invitation-link-one-time',
   invitationUnavailable: 'message.invitation-unavailable',
+  invitationAuthenticationRequired: 'message.invitation-authentication-required',
   invitedToJoin: 'message.invited-to-join',
   noInvitations: 'message.no-invitations',
   alreadyTeamMember: 'message.ALREADY_TEAM_MEMBER',

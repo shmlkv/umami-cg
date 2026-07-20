@@ -13,16 +13,22 @@ export interface AuthResponseUser {
   createdAt: Date | null;
 }
 
-export async function createAuthResponse(user: AuthResponseUser) {
+export async function getAuthResponseUser(user: Omit<AuthResponseUser, 'password'>) {
   const { id, username, role, createdAt } = user;
+  const teams = await getAllUserTeams(id);
+
+  return { id, username, role, createdAt, isAdmin: role === ROLES.admin, teams };
+}
+
+export async function createAuthResponse(user: AuthResponseUser) {
+  const { id, role } = user;
   const pwd = hash(user.password);
   const token = redis.enabled
     ? await saveAuth({ userId: id, role, pwd })
     : createSecureToken({ userId: id, role, pwd }, secret());
-  const teams = await getAllUserTeams(id);
 
   return {
     token,
-    user: { id, username, role, createdAt, isAdmin: role === ROLES.admin, teams },
+    user: await getAuthResponseUser(user),
   };
 }

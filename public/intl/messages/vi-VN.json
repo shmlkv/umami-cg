@@ -455,6 +455,7 @@
     "confirm-revoke-invitation": "Are you sure you want to revoke this invitation?",
     "invitation-link-one-time": "Copy this invitation link now. It will not be shown again.",
     "invitation-unavailable": "This invitation can no longer be used.",
+    "invitation-authentication-required": "Sign in through your configured authentication provider, then reopen this invitation link.",
     "invited-to-join": "You've been invited to join",
     "no-invitations": "There are no invitations.",
     "ALREADY_TEAM_MEMBER": "You are already a member of the team.",
