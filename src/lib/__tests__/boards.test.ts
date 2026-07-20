@@ -1,11 +1,8 @@
 import {
-  BOARD_ENTITY_TYPES,
-  isBoardComponentSupported,
-} from '../boards';
-import {
   BOARD_COMPONENT_COMPATIBILITY_MATRIX,
   getSupportedBoardComponentEntityTypes,
 } from '../boardComponentCompatibility';
+import { BOARD_ENTITY_TYPES, isBoardComponentSupported } from '../boards';
 
 test('isBoardComponentSupported allows events chart on website boards', () => {
   expect(isBoardComponentSupported('EventsChart', BOARD_ENTITY_TYPES.website)).toBe(true);
@@ -21,6 +18,18 @@ test('board component compatibility matrix defines website-only components expli
   expect(getSupportedBoardComponentEntityTypes('EventsChart')).toEqual([
     BOARD_ENTITY_TYPES.website,
   ]);
+});
+
+test.each([
+  'LearnaAiOperations',
+  'LearnaProductFunnel',
+  'LearnaProductKpis',
+  'LearnaProductTrend',
+  'LearnaUnitEconomics',
+])('%s is available only for websites', componentType => {
+  expect(isBoardComponentSupported(componentType, BOARD_ENTITY_TYPES.website)).toBe(true);
+  expect(isBoardComponentSupported(componentType, BOARD_ENTITY_TYPES.pixel)).toBe(false);
+  expect(isBoardComponentSupported(componentType, BOARD_ENTITY_TYPES.link)).toBe(false);
 });
 
 test('isBoardComponentSupported leaves other components available for all board entities', () => {

@@ -21,7 +21,11 @@ type EventStatsApiResponse = {
 };
 
 export function useEventStatsQuery(
-  { websiteId }: { websiteId: string },
+  {
+    websiteId,
+    event,
+    skipComparison,
+  }: { websiteId: string; event?: string; skipComparison?: boolean },
   options?: UseQueryOptions<EventStatsApiResponse, Error, EventStatsData>,
 ) {
   const { get, useQuery } = useApi();
@@ -29,12 +33,17 @@ export function useEventStatsQuery(
   const filters = useFilterParameters();
 
   return useQuery<EventStatsApiResponse, Error, EventStatsData>({
-    queryKey: ['websites:events:stats', { websiteId, startAt, endAt, ...filters }],
+    queryKey: [
+      'websites:events:stats',
+      { websiteId, startAt, endAt, ...filters, event, skipComparison },
+    ],
     queryFn: () =>
       get(`/websites/${websiteId}/events/stats`, {
         startAt,
         endAt,
         ...filters,
+        event,
+        skipComparison,
       }),
     select: response => response.data,
     enabled: !!websiteId,

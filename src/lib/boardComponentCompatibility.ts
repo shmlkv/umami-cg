@@ -2,6 +2,11 @@ import type { BoardEntityType } from './boards';
 
 export const BOARD_COMPONENT_COMPATIBILITY_MATRIX = {
   EventsChart: ['website'],
+  LearnaAiOperations: ['website'],
+  LearnaProductFunnel: ['website'],
+  LearnaProductKpis: ['website'],
+  LearnaProductTrend: ['website'],
+  LearnaUnitEconomics: ['website'],
 } as const satisfies Partial<Record<string, readonly BoardEntityType[]>>;
 
 export function getSupportedBoardComponentEntityTypes(componentType: string) {

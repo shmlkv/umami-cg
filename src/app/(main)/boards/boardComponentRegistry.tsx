@@ -1,3 +1,4 @@
+import type { ComponentType } from 'react';
 import { TextBlock } from '@/app/(main)/boards/TextBlock';
 import { LinkMetricsBar } from '@/app/(main)/links/[linkId]/LinkMetricsBar';
 import { PixelMetricsBar } from '@/app/(main)/pixels/[pixelId]/PixelMetricsBar';
@@ -13,10 +14,14 @@ import {
   Sheet,
 } from '@/components/icons';
 import { EventsChart } from '@/components/metrics/EventsChart';
+import { LearnaAiOperations } from '@/components/metrics/learna/LearnaAiOperations';
+import { LearnaProductFunnel } from '@/components/metrics/learna/LearnaProductFunnel';
+import { LearnaProductKpis } from '@/components/metrics/learna/LearnaProductKpis';
+import { LearnaProductTrend } from '@/components/metrics/learna/LearnaProductTrend';
+import { LearnaUnitEconomics } from '@/components/metrics/learna/LearnaUnitEconomics';
 import { MetricsTable } from '@/components/metrics/MetricsTable';
 import { WeeklyTraffic } from '@/components/metrics/WeeklyTraffic';
 import { WorldMap } from '@/components/metrics/WorldMap';
-import type { ComponentType } from 'react';
 
 export interface ConfigField {
   name: string;
@@ -41,6 +46,9 @@ export interface ComponentDefinition {
 }
 
 export const CATEGORIES = [
+  { key: 'business', name: 'Business' },
+  { key: 'product', name: 'Product' },
+  { key: 'operations', name: 'Operations' },
   { key: 'overview', name: 'Overview' },
   { key: 'tables', name: 'Tables' },
   { key: 'visualization', name: 'Visualization' },
@@ -96,6 +104,12 @@ const LIMIT_OPTIONS = [
   { label: '20', value: '20' },
 ];
 
+const CURRENCY_OPTIONS = [
+  { label: 'USD', value: 'USD' },
+  { label: 'EUR', value: 'EUR' },
+  { label: 'Telegram Stars (XTR)', value: 'XTR' },
+];
+
 const PixelMetricsBarAdapter = ({ websiteId }: { websiteId?: string }) =>
   websiteId ? <PixelMetricsBar pixelId={websiteId} /> : null;
 
@@ -103,6 +117,84 @@ const LinkMetricsBarAdapter = ({ websiteId }: { websiteId?: string }) =>
   websiteId ? <LinkMetricsBar linkId={websiteId} /> : null;
 
 const componentDefinitions: ComponentDefinition[] = [
+  // Business
+  {
+    type: 'LearnaUnitEconomics',
+    name: 'Learna unit economics',
+    description: 'Tracked revenue, estimated AI spend, contribution, and cost per course',
+    category: 'business',
+    icon: ChartColumnBig,
+    component: LearnaUnitEconomics,
+    defaultProps: { currency: 'USD', costPerAiRequest: 0 },
+    configFields: [
+      {
+        name: 'currency',
+        label: 'Reporting currency',
+        type: 'select',
+        options: CURRENCY_OPTIONS,
+        defaultValue: 'USD',
+      },
+      {
+        name: 'costPerAiRequest',
+        label: 'Estimated cost per successful AI request',
+        type: 'number',
+        defaultValue: 0,
+      },
+    ],
+  },
+
+  // Product
+  {
+    type: 'LearnaProductKpis',
+    name: 'Learna product pulse',
+    description: 'Generated courses, study-start visits, lesson activity, and completions',
+    category: 'product',
+    icon: PanelTop,
+    component: LearnaProductKpis,
+  },
+  {
+    type: 'LearnaProductFunnel',
+    name: 'Learna activation funnel',
+    description: 'Directional progression from intake to completed course',
+    category: 'product',
+    icon: ChartColumnBig,
+    component: LearnaProductFunnel,
+  },
+  {
+    type: 'LearnaProductTrend',
+    name: 'Learna learning trend',
+    description: 'Generated courses and completed learning work over time',
+    category: 'product',
+    icon: ChartColumnBig,
+    component: LearnaProductTrend,
+  },
+
+  // Operations
+  {
+    type: 'LearnaAiOperations',
+    name: 'Learna AI operations',
+    description: 'AI request volume, reliability, failures, and estimated spend',
+    category: 'operations',
+    icon: ChartColumnBig,
+    component: LearnaAiOperations,
+    defaultProps: { currency: 'USD', costPerAiRequest: 0 },
+    configFields: [
+      {
+        name: 'currency',
+        label: 'Cost currency',
+        type: 'select',
+        options: CURRENCY_OPTIONS,
+        defaultValue: 'USD',
+      },
+      {
+        name: 'costPerAiRequest',
+        label: 'Estimated cost per successful AI request',
+        type: 'number',
+        defaultValue: 0,
+      },
+    ],
+  },
+
   // Overview
   {
     type: 'WebsiteMetricsBar',

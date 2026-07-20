@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { getCompareDate } from '@/lib/date';
 import { getQueryFilters, parseRequest } from '@/lib/request';
 import { json, unauthorized } from '@/lib/response';
@@ -10,6 +11,7 @@ export async function GET(
   { params }: { params: Promise<{ websiteId: string }> },
 ) {
   const schema = withDateRange({
+    skipComparison: z.literal('true').optional(),
     ...filterParams,
   });
 
@@ -28,6 +30,15 @@ export async function GET(
   const filters = await getQueryFilters(query, websiteId);
 
   const data = await getWebsiteEventStats(websiteId, filters);
+
+  if (query.skipComparison === 'true') {
+    return json({
+      data: {
+        ...data,
+        comparison: { events: 0, visitors: 0, visits: 0, uniqueEvents: 0 },
+      },
+    });
+  }
 
   const { startDate, endDate } = getCompareDate(
     filters.compare ?? 'prev',

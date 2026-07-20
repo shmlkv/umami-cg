@@ -22,6 +22,11 @@ import {
   requiresBoardEntity,
   setBoardEntity,
 } from '@/lib/boards';
+import {
+  BOARD_TEMPLATE_TYPES,
+  type BoardTemplateType,
+  createBoardTemplate,
+} from '@/lib/boardTemplates';
 import type { Board } from '@/lib/types';
 
 interface BoardFormValues {
@@ -29,6 +34,7 @@ interface BoardFormValues {
   description: string;
   type: BoardType;
   entityId: string;
+  template: BoardTemplateType;
 }
 
 function getDefaultValues(board?: Partial<Board>): BoardFormValues {
@@ -40,6 +46,7 @@ function getDefaultValues(board?: Partial<Board>): BoardFormValues {
     description: board?.description ?? '',
     type: boardType,
     entityId: entityId ?? '',
+    template: BOARD_TEMPLATE_TYPES.blank,
   };
 }
 
@@ -68,11 +75,15 @@ export function BoardEditForm({
   const values = getDefaultValues(board);
 
   const handleSubmit = async (data: BoardFormValues) => {
+    const templateParameters =
+      !boardId && data.type === BOARD_TYPES.website && data.template !== BOARD_TEMPLATE_TYPES.blank
+        ? createBoardTemplate(data.template)
+        : board?.parameters;
     const result = await mutateAsync({
       name: data.name,
       description: data.description,
       type: data.type,
-      parameters: setBoardEntity(board?.parameters, data.type, data.entityId || undefined),
+      parameters: setBoardEntity(templateParameters, data.type, data.entityId || undefined),
     });
 
     toast(t(messages.saved));
@@ -91,6 +102,7 @@ export function BoardEditForm({
       {({ watch, setValue }) => {
         const type = watch('type') as BoardType;
         const entityId = watch('entityId') as string;
+        const template = watch('template') as BoardTemplateType;
         const entityLabel =
           type === BOARD_TYPES.pixel
             ? t(labels.pixel)
@@ -101,6 +113,9 @@ export function BoardEditForm({
         const handleTypeChange = (value: string) => {
           setValue('type', value as BoardType, { shouldDirty: true });
           setValue('entityId', '', { shouldDirty: true });
+          if (value !== BOARD_TYPES.website) {
+            setValue('template', BOARD_TEMPLATE_TYPES.blank, { shouldDirty: true });
+          }
         };
 
         const handleEntityChange = (value: string) => {
@@ -120,6 +135,27 @@ export function BoardEditForm({
                 placeholder={t(labels.addDescription)}
               />
             </FormField>
+            {!boardId && (
+              <FormField name="template" label="Template">
+                <Box width="100%" maxWidth="360px">
+                  <Select
+                    value={template}
+                    onChange={(value: string) => {
+                      setValue('template', value as BoardTemplateType, { shouldDirty: true });
+                      if (value !== BOARD_TEMPLATE_TYPES.blank) {
+                        setValue('type', BOARD_TYPES.website, { shouldDirty: true });
+                        setValue('entityId', '', { shouldDirty: true });
+                      }
+                    }}
+                  >
+                    <ListItem id={BOARD_TEMPLATE_TYPES.blank}>Blank board</ListItem>
+                    <ListItem id={BOARD_TEMPLATE_TYPES.founder}>Learna — Founder pulse</ListItem>
+                    <ListItem id={BOARD_TEMPLATE_TYPES.product}>Learna — Product funnel</ListItem>
+                    <ListItem id={BOARD_TEMPLATE_TYPES.ai}>Learna — AI operations</ListItem>
+                  </Select>
+                </Box>
+              </FormField>
+            )}
             <FormField
               name="type"
               label={t(labels.boardType)}
